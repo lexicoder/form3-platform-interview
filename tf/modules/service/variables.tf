@@ -9,15 +9,15 @@ variable "vault_address" {
 }
 
 variable "vault_username" {
-  type         = string
-  sensensitive = true
-  description  = "Username for the service's vault configuration."
+  type        = string
+  sensitive   = true
+  description = "Username for the service's vault configuration."
 }
 
 variable "vault_password" {
-  type         = string
-  sensensitive = true
-  description  = "Password for the service's vault configuration."
+  type        = string
+  sensitive   = true
+  description = "Password for the service's vault configuration."
 }
 
 variable "database_username" {
@@ -27,9 +27,9 @@ variable "database_username" {
 }
 
 variable "database_password" {
-  type         = string
-  sensensitive = true
-  description  = "Database password for the service."
+  type        = string
+  sensitive   = true
+  description = "Database password for the service."
 }
 
 variable "docker_image" {

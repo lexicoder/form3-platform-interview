@@ -1,0 +1,194 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository_owner }}/platformtest
+  SERVICES: "account,gateway,payment"
+
+jobs:
+  test:
+    defaults:
+      run:
+        working-directory: services/${{ matrix.component }}
+    strategy:
+      matrix:
+        component: ["account", "gateway", "payment"]
+    name: Run tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: actions/setup-go@v3
+        with:
+          go-version-file: 'services/${{ matrix.component }}/go.mod'
+      
+      - name: Run tests
+        run: go test -v ./...
+
+  build:
+    defaults:
+      run:
+        working-directory: services/${{ matrix.component }}
+    strategy:
+      matrix:
+        component: ["account", "gateway", "payment"]
+    name: Build and push docker image
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+      packages: 'write'
+    steps:
+      - uses: actions/checkout@v3
+        
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@main
+      
+      - name: Login to github container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.component }}
+
+      - name: Build and push
+        id: build-and-push
+        uses: docker/build-push-action@v3
+        with:
+          context: 'services/${{ matrix.component }}'
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: Sign the published Docker image
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          COSIGN_EXPERIMENTAL: "true"
+        run: cosign sign ${TAGS}
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    concurrency: deploy
+    needs: build
+    strategy:
+      fail-fast: true
+      max-parallel: 1
+      matrix:
+        component: ["dev", "staging", "prod"]
+    defaults:
+      run:
+        working-directory: ./tf
+    env:
+      TF_CLI_ARGS_plan: "-var-file=env/${{ matrix.component }}/terraform.tfvars"
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+      packages: 'read'
+    steps:
+      - uses: actions/checkout@v3
+        
+      - name: tfsec
+        uses: aquasecurity/tfsec-action@v1.0.2
+
+      - uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform fmt
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true
+
+      - name: Terraform Init
+        id: init
+        run: terraform init
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Login to github container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Docker compose
+        run: docker compose up -d
+      
+      - name: Docker pull and tag image
+        run: |
+          IFS=","
+          for s in $SERVICES
+          do
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-$s:main
+            docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-$s:main form3tech-oss/platformtest-$s:latest
+          done
+          
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color -out=tfplan
+        continue-on-error: true
+
+      - uses: actions/github-script@v6
+        if: github.event_name == 'pull_request'
+        env:
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Validation 🤖${{ steps.validate.outputs.stdout }}
+            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+
+            <details><summary>Show Plan</summary>
+
+            \`\`\`${process.env.PLAN}\`\`\`
+
+            </details>
+
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
+              
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+      
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve tfplan

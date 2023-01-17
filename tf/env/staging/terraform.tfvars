@@ -1,6 +1,6 @@
 environment = "staging"
 
-docker_network = "platform-interview_staging"
+docker_network = "staging"
 
 vault = {
   host_address = "http://localhost:8401"
@@ -10,10 +10,11 @@ vault = {
 
 services = {
   account = {
-    name  = "account"
-    image = "form3tech-oss/platformtest-account"
+    docker = {
+      image = "form3tech-oss/platformtest-account"
+    }
     database = {
-      user     = "account"
+      username = "account"
       password = "52b970fe-27af-41b2-937a-7dc9fd84e95b"
     }
     vault = {
@@ -22,10 +23,11 @@ services = {
     }
   },
   gateway = {
-    name  = "gateway"
-    image = "form3tech-oss/platformtest-gateway"
+    docker = {
+      image = "form3tech-oss/platformtest-gateway"
+    }
     database = {
-      user     = "gateway"
+      username = "gateway"
       password = "de658304-bda5-45a2-809c-71b496f9e9c2"
     }
     vault = {
@@ -34,10 +36,11 @@ services = {
     }
   },
   payment = {
-    name  = "payment"
-    image = "form3tech-oss/platformtest-payment"
+    docker = {
+      image = "form3tech-oss/platformtest-payment"
+    }
     database = {
-      user     = "payment"
+      username = "payment"
       password = "3b65a3ea-4048-49cc-9156-7acce61ce253"
     }
     vault = {

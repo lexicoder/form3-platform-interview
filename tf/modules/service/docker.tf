@@ -4,8 +4,8 @@ resource "docker_container" "this" {
 
   env = [
     "VAULT_ADDR=${var.vault_address}",
-    "VAULT_USERNAME=${local.vault_username}",
-    "VAULT_PASSWORD=${local.vault_password}",
+    "VAULT_USERNAME=${var.vault_username}",
+    "VAULT_PASSWORD=${var.vault_password}",
     "ENVIRONMENT=${var.environment}"
   ]
 
@@ -18,7 +18,7 @@ resource "docker_container" "this" {
   }
 
   networks_advanced {
-    name = local.docker_network
+    name = var.docker_network
   }
 
   lifecycle {

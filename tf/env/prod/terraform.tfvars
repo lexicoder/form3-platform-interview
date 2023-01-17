@@ -1,6 +1,6 @@
 environment = "production"
 
-docker_network = "vagrant_production"
+docker_network = "production"
 
 vault = {
   host_address = "http://localhost:8301"
@@ -10,10 +10,11 @@ vault = {
 
 services = {
   account = {
-    name  = "account"
-    image = "form3tech-oss/platformtest-account"
+    docker = {
+      image = "form3tech-oss/platformtest-account"
+    }
     database = {
-      user     = "account"
+      username = "account"
       password = "396e73e7-34d5-4b0a-ae1b-b128aa7f9977"
     }
     vault = {
@@ -22,10 +23,11 @@ services = {
     }
   },
   gateway = {
-    name  = "gateway"
-    image = "form3tech-oss/platformtest-gateway"
+    docker = {
+      image = "form3tech-oss/platformtest-gateway"
+    }
     database = {
-      user     = "gateway"
+      username = "gateway"
       password = "33fc0cc8-b0e3-4c06-8cf6-c7dce2705329"
     }
     vault = {
@@ -34,10 +36,11 @@ services = {
     }
   },
   payment = {
-    name  = "payment"
-    image = "form3tech-oss/platformtest-payment"
+    docker = {
+      image = "form3tech-oss/platformtest-payment"
+    }
     database = {
-      user     = "payment"
+      username = "payment"
       password = "821462d7-47fb-402c-a22a-a58867602e39"
     }
     vault = {

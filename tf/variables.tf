@@ -1,5 +1,10 @@
-variable "environment" {}
-variable "docker_network" {}
+variable "environment" {
+  type = string
+}
+
+variable "docker_network" {
+  type = string
+}
 
 variable "vault" {
   type = object({
@@ -11,17 +16,19 @@ variable "vault" {
 
 variable "services" {
   type = map(object({
-    image = string
-    tag   = optional(string, "latest")
+    docker = object({
+      image = string
+      tag   = optional(string, "latest")
+    })
     ports = optional(list(string), [])
-    database = optional(object({
-      user     = string
-      password = string
-    }))
-    vault = optional(object({
+    database = object({
       username = string
       password = string
-    }))
+    })
+    vault = object({
+      username = string
+      password = string
+    })
   }))
 }
 

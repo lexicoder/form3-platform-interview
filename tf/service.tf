@@ -20,6 +20,7 @@ module "service" {
   database_username = each.value.database.username
   database_password = each.value.database.password
   docker_image      = each.value.docker.image
+  docker_image_tag  = each.value.docker.tag
   environment       = var.environment
   docker_network    = var.docker_network
   depends_on = [
