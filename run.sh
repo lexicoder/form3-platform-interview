@@ -6,7 +6,7 @@ echo Installing docker-compose
 os=$(uname -s | tr '[:upper:]' '[:lower:]')
 arch=$(uname -m)
 pro=$(dpkg --print-architecture)
-terraform_version="1.2.5"
+terraform_version="1.3.7"
 sudo curl -L "https://github.com/docker/compose/releases/download/v2.1.1/docker-compose-${os}-${arch}" -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
 
@@ -27,6 +27,13 @@ docker-compose up -d
 popd
 echo Applying terraform script
 pushd /vagrant/tf
+terraform workspace new dev
 terraform init -upgrade
-terraform apply -auto-approve
+terraform apply -auto-approve -var-file=env/dev/terraform.tfvars
+terraform workspace new staging
+terraform init -upgrade
+terraform apply -auto-approve -var-file=env/staging/terraform.tfvars
+terraform workspace new prod
+terraform init -upgrade
+terraform apply -auto-approve -var-file=env/prod/terraform.tfvars
 popd
