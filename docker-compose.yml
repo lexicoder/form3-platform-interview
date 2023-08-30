@@ -11,7 +11,7 @@ services:
   vault-development:
     networks:
       - development
-    image: vault:1.12.2
+    image: vault:1.13.3
     cap_add:
       - IPC_LOCK
     ports:
@@ -21,7 +21,7 @@ services:
   vault-staging:
     networks:
       - staging
-    image: vault:1.12.2
+    image: vault:1.13.3
     cap_add:
       - IPC_LOCK
     ports:
@@ -31,7 +31,7 @@ services:
   vault-production:
     networks:
       - production
-    image: vault:1.12.2
+    image: vault:1.13.3
     cap_add:
       - IPC_LOCK
     ports:
