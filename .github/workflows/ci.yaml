@@ -115,7 +115,7 @@ jobs:
       - name: tfsec
         uses: aquasecurity/tfsec-action@v1.0.3
 
-      - uses: hashicorp/setup-terraform@v2
+      - uses: hashicorp/setup-terraform@v3
 
       - name: Terraform fmt
         id: fmt
