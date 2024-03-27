@@ -8,7 +8,7 @@ terraform {
     }
 
     vault = {
-      version = "3.24.0"
+      version = "4.2.0"
     }
   }
 }
