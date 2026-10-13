@@ -1,6 +1,6 @@
 module github.com/form3tech-oss/platform-interview/services/accounts
 
-go 1.17
+go 1.25.0
 
 require github.com/hashicorp/vault/api v1.11.0
 
@@ -22,9 +22,9 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pierrec/lz4 v2.5.2+incompatible // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
-	golang.org/x/crypto v0.17.0 // indirect
-	golang.org/x/net v0.17.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/crypto v0.51.0 // indirect
+	golang.org/x/net v0.55.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
 	golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 )
